@@ -1,0 +1,183 @@
+Datasets
+Dataset Overview
+
+The experiments in this project are built around multilingual sequence labeling datasets for two tasks:
+
+Part-of-Speech (POS) tagging
+Named Entity Recognition (NER)
+
+The configuration organizes experiments by language and task, and maps each experiment to:
+
+a dataset folder inside the dataset root,
+a conllu_prefix used to identify the corresponding .conllu files,
+and a ranking file used for neuron-selection-based experiments.
+
+The dataset root is defined as ./data, which indicates that all datasets are expected to be stored under a common local parent directory.
+
+POS Datasets Used
+
+For POS tagging, the project uses four Universal Dependencies-style datasets across four languages:
+
+1. Arabic POS
+Dataset folder: UD_Arabic-PADT
+File prefix: ar_padt
+2. Hindi POS
+Dataset folder: UD_Hindi-HDTB
+File prefix: hi_hdtb
+3. Chinese POS
+Dataset folder: UD_Chinese-GSD
+File prefix: zh_gsd
+4. French POS
+Dataset folder: UD_French-GSD
+File prefix: fr_gsd
+
+These four POS datasets are used in both the mBERT and XLM-R experiment groups, which shows that the comparison is controlled across the same language-task setup rather than across different corpora.
+
+NER Datasets Used
+
+For NER, the project uses four datasets, again covering the same four languages:
+
+1. Arabic NER
+Dataset folder: UD_Arabic-NERD
+File prefix: ar_ner
+2. Hindi NER
+Dataset folder: UD_Hindi-NERD
+File prefix: hi_ner
+3. Chinese NER
+Dataset folder: UD_Chinese-NERD
+File prefix: zh_ner
+4. French NER
+Dataset folder: UD_French_NERD
+File prefix: fr_ner
+
+These NER datasets are also reused across both model families, allowing direct comparison of mBERT and XLM-R under the same language and task conditions.
+
+Dataset Structure and File Organization
+
+The configuration suggests that datasets are stored in folder-based format under a common root directory, with each experiment referring to:
+
+dataset_folder for the corpus directory,
+conllu_prefix for identifying file names,
+and ranking_rel_path for the corresponding neuron ranking file.
+
+This indicates a consistent naming and loading convention across all experiments. Since the prefixes are UD-style and the earlier pipeline uses .conllu files, these datasets can be described as CoNLL-U / CoNLL-U-like sequence labeling datasets prepared for token-level classification. The configuration itself does not explicitly enumerate train/dev/test file names, but the conllu_prefix strongly indicates that each dataset is accessed through a standardized prefix-based file loading pipeline.
+
+Final Dataset Inventory
+POS
+Arabic — UD_Arabic-PADT — ar_padt
+Hindi — UD_Hindi-HDTB — hi_hdtb
+Chinese — UD_Chinese-GSD — zh_gsd
+French — UD_French-GSD — fr_gsd
+NER
+Arabic — UD_Arabic-NERD — ar_ner
+Hindi — UD_Hindi-NERD — hi_ner
+Chinese — UD_Chinese-NERD — zh_ner
+French — UD_French_NERD — fr_ner
+Dataset Interpretation for the Paper
+
+From a paper-writing perspective, the dataset design has three important characteristics:
+
+First, the study is multilingual, covering Arabic, Hindi, Chinese, and French. Second, it is multi-task, spanning both POS tagging and NER. Third, it is comparative, because the same dataset-language combinations are reused across both mBERT and XLM-R, making architectural and method comparisons cleaner and more defensible.
+
+Models
+Model Overview
+
+The model scope for this project consists of two multilingual encoder-based transformer architectures:
+
+mBERT
+XLM-R
+
+These are the only two model families that should be described in the report. The experiment configuration explicitly separates one group for mBERT experiments and another group labeled with XLM_... keys; per your clarification, those experiment keys correspond to the XLM-R model family in the actual project write-up.
+
+mBERT
+
+The first model family used in this work is mBERT, i.e. multilingual BERT. In the configuration, the mBERT experiments appear under the POS keys:
+
+hindi
+arabic
+Chinese
+french
+
+and under the NER keys:
+
+arabic_ner
+chinese_ner
+french_ner
+hindi_ner
+
+This means mBERT is used for:
+
+POS tagging in Arabic, Hindi, Chinese, and French
+NER in Arabic, Hindi, Chinese, and French
+
+The ranking files associated with these entries are all mBERT-side probeless rankings, which indicates that the same model family participates not only in baseline fine-tuning but also in neuron-ranking-based analysis.
+
+XLM-R
+
+The second model family used in this work is XLM-R. In the configuration, these experiments appear under keys prefixed with XLM_, divided into POS and NER groups:
+
+XLM-R POS
+XLM_arabic_pos
+XLM_french_pos
+XLM_hindi_pos
+XLM_chinese_pos
+XLM-R NER
+XLM_arabic_ner
+XLM_chinese_ner
+XLM_french_ner
+XLM_hindi_ner
+
+These entries map to the same dataset folders and conllu_prefix values used for mBERT, which means XLM-R is evaluated on the exact same language-task combinations:
+
+Arabic POS and NER
+Hindi POS and NER
+Chinese POS and NER
+French POS and NER
+Model Usage Across the Study
+
+Together, mBERT and XLM-R form the backbone of the experimental study. Their role in the paper can be described in three layers:
+
+1. Baseline encoder architectures
+
+Both models act as multilingual encoder baselines for token classification tasks.
+
+2. NeFT adaptation targets
+
+The project adapts NeFT to encoder-based architectures, so both models serve as the main targets for testing whether neuron-focused fine-tuning ideas transfer effectively from the original setup to multilingual encoders.
+
+3. Probeless comparison models
+
+Both model families are also tied to ranking files for probeless experiments, allowing direct comparison between NeFT-style approaches and probeless neuron selection under matched language and task settings.
+
+Comparative Design Value
+
+A strong feature of the model setup is that it keeps the comparison structured:
+
+same four languages,
+same two tasks,
+same dataset folders,
+two different multilingual encoder families.
+
+This makes it possible to analyze:
+
+whether NeFT-style encoder adaptation behaves consistently across architectures,
+whether mBERT and XLM-R differ in sensitivity to neuron selection,
+and whether probeless rankings interact differently with each model family.
+
+That structure is one of the clearest strengths of the experimental design and should be emphasized in the report.
+
+Final Model Inventory
+Model families used
+mBERT
+XLM-R
+Tasks covered by both models
+POS tagging
+Named Entity Recognition
+Languages covered by both models
+Arabic
+Hindi
+Chinese
+French
+Report-Ready Summary
+
+This study uses two multilingual encoder-based transformer models, mBERT and XLM-R, to evaluate encoder-side adaptation of NeFT and to compare NeFT with probeless neuron selection. Both models are tested on the same multilingual dataset suite spanning Arabic, Hindi, Chinese, and French, and on two sequence labeling tasks: POS tagging and NER. The dataset configuration is standardized through folder-based corpus organization and conllu_prefix-based file loading, which supports controlled comparisons across architectures, tasks, and neuron selection methods.
