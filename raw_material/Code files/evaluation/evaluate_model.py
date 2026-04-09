@@ -168,7 +168,7 @@ def main():
     print(f"Loaded {len(raw_test_ds)} test sentences.")
 
     # 3. Prepare CSV Output
-    output_folder = "./evaluation/scores"
+    output_folder = "./Results/scores"
     os.makedirs(output_folder, exist_ok=True)  # Creates the folder if it doesn't exist
     
     csv_file = os.path.join(output_folder, f"evaluation_summary_{args.lang}.csv")

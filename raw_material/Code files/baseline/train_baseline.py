@@ -3,8 +3,8 @@ import sys
 import argparse
 import datasets
 import transformers
-import numpy as np       
-import evaluate          
+import numpy as np
+import evaluate
 from transformers import (
     AutoTokenizer,
     AutoModelForTokenClassification,
@@ -15,7 +15,7 @@ from transformers import (
 )
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-import config  
+import config
 
 # =========================
 # CoNLL-U Parser
@@ -40,7 +40,7 @@ def read_conllu(file_path: str):
                 continue
 
             tokens.append(parts[1])      # FORM
-            tags.append(parts[3])        # NER Tag
+            tags.append(parts[3])        # Label column
 
     return sentences, labels
 
@@ -60,8 +60,10 @@ def main():
 
     cfg = config.EXPERIMENTS[args.lang]
     data_dir = os.path.join(config.DATASET_ROOT, cfg["dataset_folder"])
+    model_name = cfg["model_name"]
 
     print(f"Start Baseline Training for: {args.lang}")
+    print(f"Using model: {model_name}")
     transformers.set_seed(42)
 
     # 3. Load Data (Dynamic Paths)
@@ -82,7 +84,6 @@ def main():
         logits, labels = eval_preds
         predictions = np.argmax(logits, axis=-1)
 
-        # Remove ignored index (special tokens labeled as -100)
         true_predictions = [
             [id2label[p] for (p, l) in zip(prediction, label) if l != -100]
             for prediction, label in zip(predictions, labels)
@@ -99,7 +100,6 @@ def main():
             "f1": results["overall_f1"],
             "accuracy": results["overall_accuracy"],
         }
-    # -------------------------------------------------------
 
     # HF Dataset
     dataset = datasets.DatasetDict({
@@ -107,7 +107,6 @@ def main():
         "validation": datasets.Dataset.from_dict({"tokens": dev_tokens, "labels": dev_tags}),
     })
 
-    model_name = "xlm-roberta-base"
     tokenizer = AutoTokenizer.from_pretrained(model_name)
 
     def tokenize_and_align_labels(examples):
@@ -119,7 +118,8 @@ def main():
         )
 
         aligned_labels = []
-        for i, word_ids in enumerate(tokenized.word_ids(batch_index=j) for j in range(len(tokenized["input_ids"]))):
+        for i in range(len(tokenized["input_ids"])):
+            word_ids = tokenized.word_ids(batch_index=i)
             label_ids = []
             previous_word_idx = None
 
@@ -166,8 +166,8 @@ def main():
         eval_strategy="epoch",
         save_strategy="epoch",
         load_best_model_at_end=True,
-        metric_for_best_model="f1",          
-        greater_is_better=True,  
+        metric_for_best_model="f1",
+        greater_is_better=True,
         logging_steps=500,
         report_to="none",
         save_total_limit=2
@@ -180,13 +180,14 @@ def main():
         eval_dataset=dataset["validation"],
         processing_class=tokenizer,
         data_collator=data_collator,
-        compute_metrics=compute_metrics,    
+        compute_metrics=compute_metrics,
         callbacks=[EarlyStoppingCallback(early_stopping_patience=5)]
     )
 
     trainer.train()
     trainer.save_model()
     print(f"Baseline model saved to {output_dir}")
+
 
 if __name__ == "__main__":
     main()

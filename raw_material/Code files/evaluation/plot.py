@@ -1,4 +1,5 @@
 import os
+import argparse
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -6,14 +7,8 @@ import matplotlib.pyplot as plt
 # CONFIGURATION: EDIT ONLY THIS SECTION
 # =========================================================
 
-LANG = "XLM_arabic_pos"   # example: arabic, hindi, marathi, tamil
-
 # Input CSV path
 # Option 1: direct file path
-INPUT_CSV = f"./evaluation/scores/evaluation_summary_{LANG}.csv"
-
-# Output folder
-OUTPUT_DIR = f"./evaluation/metric_plots/{LANG}"
 
 # Toggle plots
 PLOT_ACCURACY = True
@@ -136,6 +131,14 @@ def plot_metric(df, metric, output_dir, lang):
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--lang", required=True)
+    args = parser.parse_args()
+
+    LANG = args.lang
+    INPUT_CSV = f"./Results/scores/evaluation_summary_{LANG}.csv"
+    OUTPUT_DIR = f"./Results/metric_plots/{LANG}"
+
     if not os.path.exists(INPUT_CSV):
         raise FileNotFoundError(f"Input CSV not found: {INPUT_CSV}")
 
